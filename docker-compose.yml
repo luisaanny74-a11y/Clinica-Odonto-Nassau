@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: clinica_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: clinica_odonto
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - clinica-net
+
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: clinica_backend
+    restart: always
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:rootpassword@db:3306/clinica_odonto
+      - SECRET_KEY=sua_chave_secreta_jwt_aqui
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - clinica-net
+
+  frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: clinica_frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - clinica-net
+
+volumes:
+  mysql_data:
+
+networks:
+  clinica-net:
+    driver: bridge
