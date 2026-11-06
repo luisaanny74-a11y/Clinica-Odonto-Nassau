@@ -1,5 +1,5 @@
 -- 29.1 Usuários
-CREATE TABLE usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
@@ -12,7 +12,7 @@ CREATE TABLE usuarios (
 );
 
 -- 29.2 Pacientes e prontuários
-CREATE TABLE pacientes (
+CREATE TABLE IF NOT EXISTS pacientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome_completo VARCHAR(150) NOT NULL,
     cpf VARCHAR(11) UNIQUE,
@@ -33,7 +33,7 @@ CREATE TABLE pacientes (
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE prontuarios (
+CREATE TABLE IF NOT EXISTS prontuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     paciente_id INT NOT NULL UNIQUE,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -41,13 +41,13 @@ CREATE TABLE prontuarios (
 );
 
 -- 29.3 Especialidades e atendimentos
-CREATE TABLE especialidades (
+CREATE TABLE IF NOT EXISTS especialidades (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL UNIQUE,
     ativo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE atendimentos (
+CREATE TABLE IF NOT EXISTS atendimentos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     prontuario_id INT NOT NULL,
     especialidade_id INT NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE atendimentos (
 );
 
 -- 29.4 Fichas e Semiologia
-CREATE TABLE fichas (
+CREATE TABLE IF NOT EXISTS fichas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     atendimento_id INT NOT NULL,
     tipo VARCHAR(50) NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE fichas (
     FOREIGN KEY (atendimento_id) REFERENCES atendimentos(id)
 );
 
-CREATE TABLE fichas_semiologia (
+CREATE TABLE IF NOT EXISTS fichas_semiologia (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ficha_id INT NOT NULL UNIQUE,
     queixa_principal TEXT,
@@ -94,12 +94,12 @@ CREATE TABLE fichas_semiologia (
 );
 
 -- 29.5 Condições, alergias e medicamentos
-CREATE TABLE condicoes_medicas (
+CREATE TABLE IF NOT EXISTS condicoes_medicas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL UNIQUE
 );
 
-CREATE TABLE paciente_condicoes_medicas (
+CREATE TABLE IF NOT EXISTS paciente_condicoes_medicas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     paciente_id INT NOT NULL,
     condicao_id INT NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE paciente_condicoes_medicas (
     FOREIGN KEY (condicao_id) REFERENCES condicoes_medicas(id)
 );
 
-CREATE TABLE alergias (
+CREATE TABLE IF NOT EXISTS alergias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     paciente_id INT NOT NULL,
     tipo ENUM('MEDICAMENTO', 'ANESTESICO', 'ALIMENTO', 'MATERIAL', 'OUTRA') NOT NULL,
@@ -121,7 +121,7 @@ CREATE TABLE alergias (
     FOREIGN KEY (paciente_id) REFERENCES pacientes(id)
 );
 
-CREATE TABLE medicamentos_paciente (
+CREATE TABLE IF NOT EXISTS medicamentos_paciente (
     id INT AUTO_INCREMENT PRIMARY KEY,
     paciente_id INT NOT NULL,
     nome VARCHAR(150) NOT NULL,
@@ -134,7 +134,7 @@ CREATE TABLE medicamentos_paciente (
 );
 
 -- 29.6 Sinais vitais
-CREATE TABLE sinais_vitais (
+CREATE TABLE IF NOT EXISTS sinais_vitais (
     id INT AUTO_INCREMENT PRIMARY KEY,
     atendimento_id INT NOT NULL,
     pressao_sistolica INT,
@@ -152,21 +152,21 @@ CREATE TABLE sinais_vitais (
 );
 
 -- 29.7 Odontograma
-CREATE TABLE odontogramas (
+CREATE TABLE IF NOT EXISTS odontogramas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     prontuario_id INT NOT NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (prontuario_id) REFERENCES prontuarios(id)
 );
 
-CREATE TABLE condicoes_odontologicas (
+CREATE TABLE IF NOT EXISTS condicoes_odontologicas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo VARCHAR(50) NOT NULL UNIQUE,
     nome VARCHAR(150) NOT NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE TABLE odontograma_registros (
+CREATE TABLE IF NOT EXISTS odontograma_registros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     odontograma_id INT NOT NULL,
     atendimento_id INT NOT NULL,
@@ -186,7 +186,7 @@ CREATE TABLE odontograma_registros (
 );
 
 -- 29.8 Aprovações e histórico
-CREATE TABLE aprovacoes (
+CREATE TABLE IF NOT EXISTS aprovacoes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ficha_id INT NOT NULL,
     professor_id INT NOT NULL,
@@ -197,7 +197,7 @@ CREATE TABLE aprovacoes (
     FOREIGN KEY (professor_id) REFERENCES usuarios(id)
 );
 
-CREATE TABLE historico_status_ficha (
+CREATE TABLE IF NOT EXISTS historico_status_ficha (
     id INT AUTO_INCREMENT PRIMARY KEY,
     ficha_id INT NOT NULL,
     status_anterior VARCHAR(50),
@@ -208,9 +208,17 @@ CREATE TABLE historico_status_ficha (
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
--- Inserção dos usuários oficiais do MVP
+-- Limpeza prévia para evitar duplicidade caso o container reinicie
+DELETE FROM usuarios WHERE email IN (
+    'aluno@uninassau.edu.br',
+    'professor@uninassau.edu.br',
+    'recepcao@uninassau.edu.br',
+    'coordenadora@uninassau.edu.br'
+);
+
+-- Inserção dos usuários oficiais do MVP (Senha padrão gerada por bcrypt para '123456')
 INSERT INTO usuarios (nome, email, senha_hash, matricula, perfil, ativo) VALUES
-('Aluno Teste', 'aluno@uninassau.edu.br', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'OD2026A', 'ALUNO', TRUE),
-('Professor Teste', 'professor@uninassau.edu.br', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'PR02026', 'PROFESSOR', TRUE),
-('Recepção Teste', 'recepcao@uninassau.edu.br', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'RC2026', 'RECEPCAO', TRUE),
-('Coordenadora Admin', 'coordenadora@uninassau.edu.br', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'AD02026', 'ADMIN', TRUE);
+('Aluno Teste', 'aluno@uninassau.edu.br', '$2b$12$7WF7zZlLOFsCqAHKMYkTBerGysCmGFR.ovtMlaGzcog4/X5jfBpSe', 'OD2026A', 'ALUNO', TRUE),
+('Professor Teste', 'professor@uninassau.edu.br', '$2b$12$7WF7zZlLOFsCqAHKMYkTBerGysCmGFR.ovtMlaGzcog4/X5jfBpSe', 'PR02026', 'PROFESSOR', TRUE),
+('Recepção Teste', 'recepcao@uninassau.edu.br', '$2b$12$7WF7zZlLOFsCqAHKMYkTBerGysCmGFR.ovtMlaGzcog4/X5jfBpSe', 'RC2026', 'RECEPCAO', TRUE),
+('Coordenadora Admin', 'coordenadora@uninassau.edu.br', '$2b$12$7WF7zZlLOFsCqAHKMYkTBerGysCmGFR.ovtMlaGzcog4/X5jfBpSe', 'AD02026', 'ADMIN', TRUE);

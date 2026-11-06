@@ -5,11 +5,12 @@ WORKDIR /app
 # Instala git e dependências do sistema necessárias para compilar o MySQL
 RUN apt-get update && apt-get install -y git gcc default-libmysqlclient-dev pkg-config && rm -rf /var/lib/apt/lists/*
 
-# Clona o repositório do backend diretamente do GitHub (substitua pela URL correta se necessário)
+# Clona o repositório do backend diretamente do GitHub
 RUN git clone https://github.com/luisaanny74-a11y/Backend-Clinica-Odonto.git .
 
-# Instala as dependências do Python
+# Instala as dependências do Python incluindo o validador de e-mails
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir "email-validator"
 
 EXPOSE 8000
 
